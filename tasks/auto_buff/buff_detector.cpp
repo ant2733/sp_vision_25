@@ -1,5 +1,7 @@
 #include "buff_detector.hpp"
 
+#include "tools/opencv_compat.hpp"
+
 #include "tools/logger.hpp"
 
 namespace auto_buff

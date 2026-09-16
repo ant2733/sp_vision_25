@@ -1,4 +1,6 @@
 #include "buff_solver.hpp"
+
+#include "tools/opencv_compat.hpp"
 namespace auto_buff
 {
 cv::Matx33f Solver::rotation_matrix(double angle) const

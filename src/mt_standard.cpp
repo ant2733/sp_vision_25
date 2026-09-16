@@ -1,3 +1,4 @@
+#include <atomic>
 #include <chrono>
 #include <opencv2/opencv.hpp>
 #include <thread>

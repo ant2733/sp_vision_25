@@ -1,5 +1,5 @@
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <yaml-cpp/yaml.h>
 
 #include <Eigen/Dense>  // 必须在opencv2/core/eigen.hpp上面

@@ -8,6 +8,7 @@
 
 #include "armor.hpp"
 #include "classifier.hpp"
+#include "tools/opencv_compat.hpp"
 
 namespace auto_aim
 {

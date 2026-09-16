@@ -75,10 +75,33 @@ IMU型号：使用C板内置BMI088作为IMU\
         screen
     ```
 
+   Arch Linux：
+    ```bash
+    sudo pacman -S --needed \
+        base-devel \
+        cmake \
+        can-utils \
+        ceres-solver \
+        eigen \
+        fmt \
+        libusb \
+        nlohmann-json \
+        opencv \
+        openvino \
+        openssh \
+        screen \
+        spdlog \
+        yaml-cpp
+    ```
+
+   项目已自带 x86_64/aarch64 版本的海康和迈德威视运行库，无需依赖 SDK
+   安装器写入的 Ubuntu `/opt` 路径。如果需要相机厂商提供的工具或 udev
+   规则，仍需另外安装对应 SDK。
+
 2. 编译：
     ```bash
     cmake -B build
-    make -C build/ -j`nproc`
+    cmake --build build -j$(nproc)
     ```
 
 3. 运行demo:

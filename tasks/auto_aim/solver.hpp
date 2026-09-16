@@ -6,6 +6,7 @@
 #include <opencv2/core/eigen.hpp>
 
 #include "armor.hpp"
+#include "tools/opencv_compat.hpp"
 
 namespace auto_aim
 {

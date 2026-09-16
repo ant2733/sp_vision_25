@@ -1,8 +1,10 @@
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
 #include <opencv2/opencv.hpp>
+
+#include "tools/opencv_compat.hpp"
 
 #include "tools/img_tools.hpp"
 

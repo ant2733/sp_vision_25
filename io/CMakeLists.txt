@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 find_package(yaml-cpp REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBUSB REQUIRED IMPORTED_TARGET libusb-1.0)
 
 add_subdirectory(serial)
 
@@ -15,27 +17,36 @@ add_library(io STATIC
     gimbal/gimbal.cpp
 )
 
-# hikrobot
-target_include_directories(io PUBLIC hikrobot/include)
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
-  target_link_directories(io PUBLIC hikrobot/lib/amd64)
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-  target_link_directories(io PUBLIC hikrobot/lib/arm64)
+# Select the bundled vendor libraries explicitly.  This avoids relying on the
+# Ubuntu-specific /opt installation paths used by the SDK installers.
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$")
+  set(CAMERA_SDK_ARCH amd64)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|ARM64)$")
+  set(CAMERA_SDK_ARCH arm64)
 else()
-  message(FATAL_ERROR "Unsupported architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}!")
+  message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}!")
 endif()
 
-# mindvision
-target_include_directories(io PUBLIC mindvision/include)
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
-  target_link_directories(io PUBLIC mindvision/lib/amd64)
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-  target_link_directories(io PUBLIC mindvision/lib/arm64)
-else()
-  message(FATAL_ERROR "Unsupported architecture: ${CMAKE_HOST_SYSTEM_PROCESSOR}!")
-endif()
+add_library(hikrobot_sdk SHARED IMPORTED)
+set_target_properties(hikrobot_sdk PROPERTIES
+  IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/hikrobot/lib/${CAMERA_SDK_ARCH}/libMvCameraControl.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/hikrobot/include"
+)
 
-target_link_libraries(io MvCameraControl MVSDK usb-1.0 yaml-cpp serial)
+add_library(mindvision_sdk SHARED IMPORTED)
+set_target_properties(mindvision_sdk PROPERTIES
+  IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/mindvision/lib/${CAMERA_SDK_ARCH}/libMVSDK.so"
+  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/mindvision/include"
+)
+
+target_link_libraries(io PUBLIC
+  hikrobot_sdk
+  mindvision_sdk
+  PkgConfig::LIBUSB
+  yaml-cpp::yaml-cpp
+  serial
+  Eigen3::Eigen
+)
 
 ################## 检查 ROS 环境 ##################
 find_package(ament_cmake QUIET)

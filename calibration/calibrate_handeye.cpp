@@ -1,10 +1,12 @@
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <yaml-cpp/yaml.h>
 
 #include <Eigen/Dense>  // 必须在opencv2/core/eigen.hpp上面
 #include <fstream>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
+
+#include "tools/opencv_compat.hpp"
 
 #include "tools/img_tools.hpp"
 #include "tools/math_tools.hpp"

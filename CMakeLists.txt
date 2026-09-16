@@ -1,21 +1,43 @@
 cmake_minimum_required(VERSION 3.16.3)
 
-project(sp_vision)
+project(sp_vision LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
 message(STATUS "--------------------CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}--------------------")
 
-find_package(OpenCV REQUIRED)
+# Request only the modules used by this project.  Asking for every OpenCV
+# module also pulls in optional dependencies (for example VTK through viz),
+# which is fragile on rolling-release distributions.
+find_package(OpenCV REQUIRED COMPONENTS core dnn highgui imgcodecs imgproc video videoio)
+if(OpenCV_VERSION_MAJOR GREATER_EQUAL 5)
+    find_package(OpenCV REQUIRED COMPONENTS calib geometry)
+else()
+    find_package(OpenCV REQUIRED COMPONENTS calib3d)
+endif()
 find_package(fmt REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(nlohmann_json REQUIRED)
-set(OpenVINO_DIR "/opt/intel/openvino_2024.6.0/runtime/cmake/")
-find_package(OpenVINO REQUIRED)
+if(NOT TARGET yaml-cpp::yaml-cpp)
+    add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
+endif()
 
-include_directories(${EIGEN3_INCLUDE_DIR})
+# Keep the original OpenVINO archive install working, but do not override a
+# distro package such as Arch's /usr/lib/cmake/openvino installation.
+if(NOT DEFINED OpenVINO_DIR AND
+   EXISTS "/opt/intel/openvino_2024.6.0/runtime/cmake/OpenVINOConfig.cmake")
+    set(OpenVINO_DIR "/opt/intel/openvino_2024.6.0/runtime/cmake" CACHE PATH
+        "Directory containing OpenVINOConfig.cmake")
+endif()
+find_package(OpenVINO REQUIRED COMPONENTS Runtime)
+find_package(Ceres REQUIRED)
+
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR})
 
@@ -37,15 +59,15 @@ add_executable(auto_buff_debug_mpc src/auto_buff_debug_mpc.cpp)
 add_executable(uav src/uav.cpp)
 add_executable(uav_debug src/uav_debug.cpp)
 
-target_link_libraries(standard ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim auto_buff tools io)
-target_link_libraries(mt_standard ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim auto_buff tools io)
-target_link_libraries(standard_mpc ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim auto_buff tools io)
-target_link_libraries(auto_aim_debug_mpc ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim auto_buff tools io)
-target_link_libraries(mt_auto_aim_debug ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim auto_buff tools io)
-target_link_libraries(auto_buff_debug ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_buff tools io ${CERES_LIBRARIES})
-target_link_libraries(auto_buff_debug_mpc ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_buff tools io ${CERES_LIBRARIES})
-target_link_libraries(uav ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim auto_buff tools io)
-target_link_libraries(uav_debug ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim tools io)
+target_link_libraries(standard ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim auto_buff tools io)
+target_link_libraries(mt_standard ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim auto_buff tools io)
+target_link_libraries(standard_mpc ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim auto_buff tools io)
+target_link_libraries(auto_aim_debug_mpc ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim auto_buff tools io)
+target_link_libraries(mt_auto_aim_debug ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim auto_buff tools io)
+target_link_libraries(auto_buff_debug ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_buff tools io Ceres::ceres)
+target_link_libraries(auto_buff_debug_mpc ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_buff tools io Ceres::ceres)
+target_link_libraries(uav ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim auto_buff tools io)
+target_link_libraries(uav_debug ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim tools io)
 
 ##################calibration################
 add_executable(capture calibration/capture.cpp)
@@ -55,9 +77,9 @@ add_executable(calibrate_robotworld_handeye calibration/calibrate_robotworld_han
 add_executable(split_video calibration/split_video.cpp)
 
 target_link_libraries(capture ${OpenCV_LIBS} fmt::fmt tools io)
-target_link_libraries(calibrate_camera ${OpenCV_LIBS} fmt::fmt yaml-cpp tools)
-target_link_libraries(calibrate_handeye ${OpenCV_LIBS} fmt::fmt yaml-cpp tools)
-target_link_libraries(calibrate_robotworld_handeye ${OpenCV_LIBS} fmt::fmt yaml-cpp tools)
+target_link_libraries(calibrate_camera ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools)
+target_link_libraries(calibrate_handeye ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools)
+target_link_libraries(calibrate_robotworld_handeye ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools)
 target_link_libraries(split_video ${OpenCV_LIBS} fmt::fmt tools)
 
 ##################tests##################
@@ -77,30 +99,30 @@ add_executable(handeye_test tests/handeye_test.cpp)
 add_executable(dm_test tests/dm_test.cpp)
 add_executable(minimum_vision_system tests/minimum_vision_system.cpp)
 
-target_link_libraries(auto_aim_test ${OpenCV_LIBS} fmt::fmt yaml-cpp tools io auto_aim)
-target_link_libraries(auto_buff_test ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_buff tools io)
-target_link_libraries(camera_detect_test ${OpenCV_LIBS} fmt::fmt yaml-cpp tools auto_aim io)
+target_link_libraries(auto_aim_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools io auto_aim)
+target_link_libraries(auto_buff_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_buff tools io)
+target_link_libraries(camera_detect_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools auto_aim io)
 target_link_libraries(camera_test ${OpenCV_LIBS} fmt::fmt tools io)
 target_link_libraries(camera_thread_test ${OpenCV_LIBS} fmt::fmt auto_aim tools io)
 target_link_libraries(cboard_test ${OpenCV_LIBS} fmt::fmt tools io)
 target_link_libraries(fire_test ${OpenCV_LIBS} fmt::fmt tools io)
-target_link_libraries(detector_video_test ${OpenCV_LIBS} fmt::fmt yaml-cpp tools auto_aim)
-target_link_libraries(gimbal_response_test ${OpenCV_LIBS} fmt::fmt yaml-cpp tools io)
+target_link_libraries(detector_video_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools auto_aim)
+target_link_libraries(gimbal_response_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools io)
 target_link_libraries(multi_usbcamera_test ${OpenCV_LIBS} fmt::fmt tools io)
-target_link_libraries(usbcamera_detect_test ${OpenCV_LIBS} fmt::fmt yaml-cpp tools io auto_aim)
-target_link_libraries(usbcamera_test ${OpenCV_LIBS} fmt::fmt yaml-cpp tools io)
-target_link_libraries(handeye_test ${OpenCV_LIBS} fmt::fmt yaml-cpp tools io auto_aim)
-target_link_libraries(dm_test ${OpenCV_LIBS} fmt::fmt yaml-cpp tools io)
-target_link_libraries(minimum_vision_system ${OpenCV_LIBS} fmt::fmt yaml-cpp tools io auto_aim)
+target_link_libraries(usbcamera_detect_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools io auto_aim)
+target_link_libraries(usbcamera_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools io)
+target_link_libraries(handeye_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools io auto_aim)
+target_link_libraries(dm_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools io)
+target_link_libraries(minimum_vision_system ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools io auto_aim)
 
 add_executable(gimbal_test tests/gimbal_test.cpp)
-target_link_libraries(gimbal_test ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim tools io)
+target_link_libraries(gimbal_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim tools io)
 
 add_executable(planner_test tests/planner_test.cpp)
-target_link_libraries(planner_test ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim tools io)
+target_link_libraries(planner_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim tools io)
 
 add_executable(planner_test_offline tests/planner_test_offline.cpp)
-target_link_libraries(planner_test_offline ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim tools io)
+target_link_libraries(planner_test_offline ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim tools io)
 
 # 检查 ROS 环境
 find_package(ament_cmake QUIET)
@@ -119,10 +141,10 @@ if(ament_cmake_FOUND AND rclcpp_FOUND AND std_msgs_FOUND AND rosidl_typesupport_
     add_executable(subscribe_test tests/subscribe_test.cpp)
     add_executable(topic_loop_test tests/topic_loop_test.cpp)
 
-    target_link_libraries(sentry ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim omniperception tools io)
-    target_link_libraries(sentry_bp ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim omniperception tools io)
-    target_link_libraries(sentry_debug ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim omniperception tools io)
-    target_link_libraries(sentry_multithread ${OpenCV_LIBS} fmt::fmt yaml-cpp auto_aim omniperception tools io)
+    target_link_libraries(sentry ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim omniperception tools io)
+    target_link_libraries(sentry_bp ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim omniperception tools io)
+    target_link_libraries(sentry_debug ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim omniperception tools io)
+    target_link_libraries(sentry_multithread ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_aim omniperception tools io)
     target_link_libraries(publish_test ${OpenCV_LIBS} fmt::fmt tools io auto_aim)
     target_link_libraries(subscribe_test ${OpenCV_LIBS} fmt::fmt tools io)
     target_link_libraries(topic_loop_test ${OpenCV_LIBS} fmt::fmt tools io)

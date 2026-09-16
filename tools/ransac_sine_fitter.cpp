@@ -81,7 +81,7 @@ bool RansacSineFitter::fit_partial_model(
   }
 
   try {
-    params = X.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(Y);
+    params = X.bdcSvd<Eigen::ComputeThinU | Eigen::ComputeThinV>().solve(Y);
     return true;
   } catch (...) {
     return false;
