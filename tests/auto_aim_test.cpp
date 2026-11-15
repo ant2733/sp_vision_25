@@ -190,6 +190,8 @@ int main(int argc, char * argv[])
 
     cv::resize(img, img, {}, 0.5, 0.5);  // 显示时缩小图片尺寸
     cv::imshow("reprojection", img);
+    cv::namedWindow("reprojection", cv::WINDOW_NORMAL);
+    cv::resizeWindow("reprojection", 960, 540);
     auto key = cv::waitKey(30);
     if (key == 'q') break;
   }

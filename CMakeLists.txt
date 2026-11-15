@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16.3)
 
 project(sp_vision LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -98,6 +100,21 @@ add_executable(usbcamera_test tests/usbcamera_test.cpp)
 add_executable(handeye_test tests/handeye_test.cpp)
 add_executable(dm_test tests/dm_test.cpp)
 add_executable(minimum_vision_system tests/minimum_vision_system.cpp)
+
+##################learning##################
+add_executable(learning
+    learning/learning.cpp
+)
+
+target_link_libraries(learning PRIVATE
+    io
+    tools
+    auto_aim
+    fmt::fmt
+    yaml-cpp::yaml-cpp
+    ${OpenCV_LIBS}
+)
+
 
 target_link_libraries(auto_aim_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp tools io auto_aim)
 target_link_libraries(auto_buff_test ${OpenCV_LIBS} fmt::fmt yaml-cpp::yaml-cpp auto_buff tools io)

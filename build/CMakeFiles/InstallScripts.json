@@ -1,0 +1,14 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/ant/Documents/RoboMaster/test/sp_vision_25/build/cmake_install.cmake",
+		"/home/ant/Documents/RoboMaster/test/sp_vision_25/build/tools/cmake_install.cmake",
+		"/home/ant/Documents/RoboMaster/test/sp_vision_25/build/io/cmake_install.cmake",
+		"/home/ant/Documents/RoboMaster/test/sp_vision_25/build/io/serial/cmake_install.cmake",
+		"/home/ant/Documents/RoboMaster/test/sp_vision_25/build/tasks/auto_aim/cmake_install.cmake",
+		"/home/ant/Documents/RoboMaster/test/sp_vision_25/build/tasks/auto_aim/planner/tinympc/cmake_install.cmake",
+		"/home/ant/Documents/RoboMaster/test/sp_vision_25/build/tasks/auto_buff/cmake_install.cmake",
+		"/home/ant/Documents/RoboMaster/test/sp_vision_25/build/tasks/omniperception/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

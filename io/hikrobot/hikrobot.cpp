@@ -11,6 +11,13 @@ namespace io
 HikRobot::HikRobot(double exposure_ms, double gain, const std::string & vid_pid)
 : exposure_us_(exposure_ms * 1e3), gain_(gain), queue_(1), daemon_quit_(false), vid_(-1), pid_(-1)
 {
+    // 开启帧率控制，限制在 120 FPS（够用即可，不必跑到极限 160+ FPS）
+    MV_CC_SetBoolValue(handle_, "AcquisitionFrameRateEnable", true);
+    MV_CC_SetFloatValue(handle_, "AcquisitionFrameRate", 120.0f);
+
+    // 限制单相机链路最大吞吐量（约 200 MB/s），防止突发抢占总线
+    MV_CC_SetIntValue(handle_, "DeviceLinkThroughputLimitMode", 1);
+    MV_CC_SetIntValue(handle_, "DeviceLinkThroughputLimit", 200000000);
   set_vid_pid(vid_pid);
   if (libusb_init(NULL)) tools::logger()->warn("Unable to init libusb!");
 
