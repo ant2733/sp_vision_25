@@ -1,8 +1,10 @@
 #ifndef IO__HIKROBOT_HPP
 #define IO__HIKROBOT_HPP
 
+#include <sys/stat.h>
 #include <atomic>
 #include <chrono>
+#include <mutex>
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <thread>
@@ -16,7 +18,7 @@ namespace io
 class HikRobot : public CameraBase
 {
 public:
-  HikRobot(double exposure_ms, double gain, const std::string & vid_pid);
+  HikRobot(double exposure_ms, double gain, const std::string & vid_pid, const std::string & serial_number);
   ~HikRobot() override;
   void read(cv::Mat & img, std::chrono::steady_clock::time_point & timestamp) override;
 
@@ -32,6 +34,9 @@ private:
 
   std::thread daemon_thread_;
   std::atomic<bool> daemon_quit_;
+
+  std::string serial_number_;
+  inline static std::mutex enum_mutex_;
 
   void * handle_;
   std::thread capture_thread_;

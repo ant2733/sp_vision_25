@@ -1,0 +1,13 @@
+camera_left:
+  camera_name: "hikrobot"
+  exposure_ms: 50
+  gain: 12.0
+  vid_pid: "2bdf:0001"
+  serial_number: "DB3093169"
+
+camera_right:
+  camera_name: "hikrobot"
+  exposure_ms: 50
+  gain: 12.0
+  vid_pid: "2bdf:0001"
+  serial_number: "DB3093278"

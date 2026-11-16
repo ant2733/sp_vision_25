@@ -8,16 +8,16 @@ using namespace std::chrono_literals;
 
 namespace io
 {
-HikRobot::HikRobot(double exposure_ms, double gain, const std::string & vid_pid)
-: exposure_us_(exposure_ms * 1e3), gain_(gain), queue_(1), daemon_quit_(false), vid_(-1), pid_(-1)
+HikRobot::HikRobot(
+  double exposure_ms, double gain, const std::string & vid_pid, const std::string & serial_number)
+: exposure_us_(exposure_ms * 1e3),
+  gain_(gain),
+  queue_(1),
+  daemon_quit_(false),
+  vid_(-1),
+  pid_(-1),
+  serial_number_(serial_number)
 {
-    // 开启帧率控制，限制在 120 FPS（够用即可，不必跑到极限 160+ FPS）
-    MV_CC_SetBoolValue(handle_, "AcquisitionFrameRateEnable", true);
-    MV_CC_SetFloatValue(handle_, "AcquisitionFrameRate", 120.0f);
-
-    // 限制单相机链路最大吞吐量（约 200 MB/s），防止突发抢占总线
-    MV_CC_SetIntValue(handle_, "DeviceLinkThroughputLimitMode", 1);
-    MV_CC_SetIntValue(handle_, "DeviceLinkThroughputLimit", 200000000);
   set_vid_pid(vid_pid);
   if (libusb_init(NULL)) tools::logger()->warn("Unable to init libusb!");
 
@@ -32,7 +32,7 @@ HikRobot::HikRobot(double exposure_ms, double gain, const std::string & vid_pid)
       if (capturing_) continue;
 
       capture_stop();
-      reset_usb();
+      // reset_usb(); // 双相机可能会VID相同，导致重置失败
       capture_start();
     }
 
@@ -65,29 +65,69 @@ void HikRobot::capture_start()
 
   unsigned int ret;
 
-  MV_CC_DEVICE_INFO_LIST device_list;
-  ret = MV_CC_EnumDevices(MV_USB_DEVICE, &device_list);
-  if (ret != MV_OK) {
-    tools::logger()->warn("MV_CC_EnumDevices failed: {:#x}", ret);
-    return;
+  // 准备加锁！===========临界区===============
+  {
+    std::lock_guard<std::mutex> lock(enum_mutex_);
+
+    MV_CC_DEVICE_INFO_LIST device_list;
+    std::memset(&device_list, 0, sizeof(MV_CC_DEVICE_INFO_LIST));
+
+    ret = MV_CC_EnumDevices(MV_USB_DEVICE, &device_list);
+    if (ret != MV_OK) {
+      tools::logger()->warn("MV_CC_EnumDevices failed: {:#x}", ret);
+      return;
+    }
+
+    if (device_list.nDeviceNum == 0) {
+      tools::logger()->warn("Not found any USB camera!");
+      return;
+    }
+
+    // 遍历所有枚举到的 USB 相机，按序列号匹配目标相机
+    MV_CC_DEVICE_INFO * target_dev = nullptr;
+    for (unsigned int i = 0; i < device_list.nDeviceNum; ++i) {
+      auto * dev_info = device_list.pDeviceInfo[i];
+      if (dev_info->nTLayerType != MV_USB_DEVICE) continue;
+
+      if (serial_number_.empty()) {
+        target_dev = dev_info;
+        break;
+      }
+      std::string dev_serial(
+        reinterpret_cast<const char *>(dev_info->SpecialInfo.stUsb3VInfo.chSerialNumber));
+
+      if (dev_serial == serial_number_) {
+        target_dev = dev_info;
+        break;
+      }
+    }
+
+    if (!target_dev) {
+      tools::logger()->warn("Camera with serial [{}] not found!", serial_number_);
+      return;
+    }
+
+    // 必须在锁释放前完成 CreateHandle（因为之后 device_list 内部内存可能被其他线程的 EnumDevices 覆盖）
+    ret = MV_CC_CreateHandle(&handle_, target_dev);
+    if (ret != MV_OK) {
+      tools::logger()->warn("MV_CC_CreateHandle [{}] failed: {:#x}", serial_number_, ret);
+      handle_ = nullptr;
+      return;
+    }
   }
 
-  if (device_list.nDeviceNum == 0) {
-    tools::logger()->warn("Not found camera!");
-    return;
-  }
-
-  ret = MV_CC_CreateHandle(&handle_, device_list.pDeviceInfo[0]);
-  if (ret != MV_OK) {
-    tools::logger()->warn("MV_CC_CreateHandle failed: {:#x}", ret);
-    return;
-  }
+  // =============临界区结束===================
 
   ret = MV_CC_OpenDevice(handle_);
   if (ret != MV_OK) {
     tools::logger()->warn("MV_CC_OpenDevice failed: {:#x}", ret);
     return;
   }
+
+  MV_CC_SetBoolValue(handle_, "AcquisitionFrameRateEnable", true);
+  MV_CC_SetFloatValue(handle_, "AcquisitionFrameRate", 120.0f);
+  MV_CC_SetIntValue(handle_, "DeviceLinkThroughputLimitMode", 1);
+  MV_CC_SetIntValue(handle_, "DeviceLinkThroughputLimit", 200000000);
 
   set_enum_value("BalanceWhiteAuto", MV_BALANCEWHITE_AUTO_CONTINUOUS);
   set_enum_value("ExposureAuto", MV_EXPOSURE_AUTO_MODE_OFF);

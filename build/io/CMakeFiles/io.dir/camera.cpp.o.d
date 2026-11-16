@@ -347,8 +347,12 @@ io/CMakeFiles/io.dir/camera.cpp.o: \
  /usr/include/opencv5/opencv2/video/tracking.hpp \
  /usr/include/opencv5/opencv2/video/background_segm.hpp \
  /home/ant/Documents/RoboMaster/test/sp_vision_25/io/hikrobot/hikrobot.hpp \
- /usr/include/c++/16/atomic /usr/include/c++/16/thread \
- /usr/include/c++/16/bits/std_thread.h \
+ /usr/include/sys/stat.h /usr/include/bits/stat.h \
+ /usr/include/bits/struct_stat.h /usr/include/bits/statx.h \
+ /usr/include/linux/stat.h /usr/include/bits/statx-generic.h \
+ /usr/include/bits/types/struct_statx_timestamp.h \
+ /usr/include/bits/types/struct_statx.h /usr/include/c++/16/atomic \
+ /usr/include/c++/16/thread /usr/include/c++/16/bits/std_thread.h \
  /usr/include/c++/16/bits/this_thread_sleep.h \
  /home/ant/Documents/RoboMaster/test/sp_vision_25/io/hikrobot/include/MvCameraControl.h \
  /home/ant/Documents/RoboMaster/test/sp_vision_25/io/hikrobot/include/CameraParams.h \
@@ -412,21 +416,16 @@ io/CMakeFiles/io.dir/camera.cpp.o: \
  /usr/include/spdlog/details/log_msg.h \
  /usr/include/spdlog/details/log_msg-inl.h \
  /usr/include/spdlog/details/os.h /usr/include/spdlog/details/os-inl.h \
- /usr/include/sys/stat.h /usr/include/bits/stat.h \
- /usr/include/bits/struct_stat.h /usr/include/bits/statx.h \
- /usr/include/linux/stat.h /usr/include/bits/statx-generic.h \
- /usr/include/bits/types/struct_statx_timestamp.h \
- /usr/include/bits/types/struct_statx.h /usr/include/fcntl.h \
- /usr/include/bits/fcntl.h /usr/include/bits/fcntl-linux.h \
- /usr/include/bits/types/struct_iovec.h /usr/include/bits/cloexec.h \
- /usr/include/linux/falloc.h /usr/include/linux/openat2.h \
- /usr/include/bits/openat2.h /usr/include/unistd.h \
- /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
- /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
- /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
- /usr/include/linux/close_range.h /usr/include/sys/syscall.h \
- /usr/include/asm/unistd.h /usr/include/asm/unistd_64.h \
- /usr/include/bits/syscall.h \
+ /usr/include/fcntl.h /usr/include/bits/fcntl.h \
+ /usr/include/bits/fcntl-linux.h /usr/include/bits/types/struct_iovec.h \
+ /usr/include/bits/cloexec.h /usr/include/linux/falloc.h \
+ /usr/include/linux/openat2.h /usr/include/bits/openat2.h \
+ /usr/include/unistd.h /usr/include/bits/posix_opt.h \
+ /usr/include/bits/environments.h /usr/include/bits/confname.h \
+ /usr/include/bits/getopt_posix.h /usr/include/bits/getopt_core.h \
+ /usr/include/bits/unistd_ext.h /usr/include/linux/close_range.h \
+ /usr/include/sys/syscall.h /usr/include/asm/unistd.h \
+ /usr/include/asm/unistd_64.h /usr/include/bits/syscall.h \
  /usr/include/spdlog/details/log_msg_buffer-inl.h \
  /usr/include/spdlog/details/backtracer-inl.h \
  /usr/include/spdlog/logger-inl.h /usr/include/spdlog/pattern_formatter.h \
